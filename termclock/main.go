@@ -25,7 +25,7 @@ var digits = [...][5][3]bool{
 	{{true, true, true}, {true, false, true}, {true, true, true}, {false, false, true}, {false, false, true}},
 }
 
-func getDisplayWithTime(time [6]int) [5][27]bool {
+func getDisplayWithTime(time *[6]int) *[5][27]bool {
 	n := display
 
 	for di, v := range time {
@@ -43,10 +43,10 @@ func getDisplayWithTime(time [6]int) [5][27]bool {
 		}
 	}
 
-	return n
+	return &n
 }
 
-func displayTime(t [5][27]bool) {
+func displayTime(t *[5][27]bool) {
 	var builder strings.Builder
 	for _, v := range t {
 		for _, w := range v {
@@ -67,7 +67,7 @@ func main() {
 		t := time.Now()
 		h, m, s := t.Hour(), t.Minute(), t.Second()
 		tm.MoveCursor(1, 1)
-		displayTime(getDisplayWithTime([...]int{h / 10, h % 10, m / 10, m % 10, s / 10, s % 10}))
+		displayTime(getDisplayWithTime(&[...]int{h / 10, h % 10, m / 10, m % 10, s / 10, s % 10}))
 		tm.Flush()
 		time.Sleep(time.Second)
 	}
