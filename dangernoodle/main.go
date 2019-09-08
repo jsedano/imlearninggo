@@ -10,8 +10,10 @@ import (
 	"github.com/hajimehoshi/ebiten/inpututil"
 )
 
+type direction int
+
 const (
-	up = iota
+	up direction = iota
 	down
 	left
 	right
@@ -20,7 +22,7 @@ const (
 type snakepart struct {
 	i            *ebiten.Image
 	x, y, px, py float64
-	d            int
+	d            direction
 }
 
 var snake = make([]*snakepart, 200, 1000)
@@ -79,7 +81,7 @@ func moveSnake() {
 
 }
 
-func moveSnakePart(i int, dir int) {
+func moveSnakePart(i int, dir direction) {
 	switch dir {
 	case up:
 		snake[i].y = snake[i].y - 2
@@ -104,7 +106,7 @@ func drawSnakePart(x float64, y float64, sp *ebiten.Image, screen *ebiten.Image)
 	screen.DrawImage(sp, op)
 }
 
-func move() int {
+func move() direction {
 	if inpututil.IsKeyJustPressed(ebiten.KeyW) {
 		return up
 	}
