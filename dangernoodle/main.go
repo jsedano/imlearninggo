@@ -19,6 +19,19 @@ const (
 	right
 )
 
+type gameStatus int
+
+const (
+	over gameStatus = iota
+	playing
+	notStarted
+)
+
+type game struct {
+	status         gameStatus
+	snakeX, snakeY float64
+}
+
 type snakepart struct {
 	i            *ebiten.Image
 	x, y, px, py float64
@@ -72,26 +85,22 @@ func update(screen *ebiten.Image) error {
 
 func moveSnake() {
 	for i := range snake {
-		moveSnakePart(i, snake[i].d)
+		switch snake[i].d {
+		case up:
+			snake[i].y = snake[i].y - 2
+		case down:
+			snake[i].y = snake[i].y + 2
+		case left:
+			snake[i].x = snake[i].x - 2
+		case right:
+			snake[i].x = snake[i].x + 2
+		}
 	}
 
 	for i := len(snake) - 1; i >= 1; i-- {
 		snake[i].d = snake[i-1].d
 	}
 
-}
-
-func moveSnakePart(i int, dir direction) {
-	switch dir {
-	case up:
-		snake[i].y = snake[i].y - 2
-	case down:
-		snake[i].y = snake[i].y + 2
-	case left:
-		snake[i].x = snake[i].x - 2
-	case right:
-		snake[i].x = snake[i].x + 2
-	}
 }
 
 func drawSnake(screen *ebiten.Image) {
