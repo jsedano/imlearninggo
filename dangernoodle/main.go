@@ -6,6 +6,11 @@ import (
 	"log"
 	"time"
 
+	"github.com/golang/freetype/truetype"
+	"github.com/hajimehoshi/ebiten/examples/resources/fonts"
+	"github.com/hajimehoshi/ebiten/text"
+	"golang.org/x/image/font"
+
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
 	"github.com/hajimehoshi/ebiten/inpututil"
@@ -40,13 +45,23 @@ type snakepart struct {
 	d            direction
 }
 
-var snake = make([]*snakepart, 5, 1000)
+var snake = make([]*snakepart, 10, 1000)
 
-const snakesize = 4
+const snakesize = 8
+
+var gameControl game
+
+var mplusNormalFont font.Face
+
+var fontx int
+var fonty int
 
 func init() {
+
+	gameControl.status = notStarted
+
 	var fx float64 = 100
-	var fy float64 = 100
+	var fy float64 = 200
 	imag := loadImage()
 	for i := range snake {
 		var s snakepart
@@ -56,6 +71,22 @@ func init() {
 		s.d = right
 		snake[i] = &s
 	}
+
+	tt, err := truetype.Parse(fonts.MPlus1pRegular_ttf)
+	if err != nil {
+		log.Fatal(err)
+	}
+	mplusNormalFont = truetype.NewFace(tt, &truetype.Options{
+		Size:    14,
+		DPI:     72,
+		Hinting: font.HintingFull,
+	})
+
+	bound, _ := font.BoundString(mplusNormalFont, "Press spacebar to play")
+	w := (bound.Max.X - bound.Min.X).Ceil()
+	h := (bound.Max.Y - bound.Min.Y).Ceil()
+	fontx = (320 - w) / 2
+	fonty = (240 - h) / 2
 }
 
 func loadImage() (eimage *ebiten.Image) {
@@ -66,7 +97,7 @@ func loadImage() (eimage *ebiten.Image) {
 
 var lastMoved = time.Now()
 var lastInput direction = -1
-var speed = time.Millisecond * 100
+var speed = time.Millisecond * 250
 
 func update(screen *ebiten.Image) error {
 	if ebiten.IsDrawingSkipped() {
@@ -74,21 +105,35 @@ func update(screen *ebiten.Image) error {
 	}
 
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f", ebiten.CurrentTPS()))
-	m := move()
-	if time.Now().After(lastMoved.Add(speed)) {
-		lastMoved = time.Now()
-		if m != -1 {
-			if (m == right && snake[0].d != left) ||
-				(m == left && snake[0].d != right) ||
-				(m == up && snake[0].d != down) ||
-				(m == down && snake[0].d != up) {
-				snake[0].d = m
-			}
+
+	switch gameControl.status {
+	case notStarted:
+
+		text.Draw(screen, "Press spacebar to play", mplusNormalFont, fontx, fonty, color.White)
+		drawSnake(screen)
+		if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+			gameControl.status = playing
 		}
 
-		moveSnake()
+	case playing:
+		m := move()
+		if time.Now().After(lastMoved.Add(speed)) {
+			lastMoved = time.Now()
+			if m != -1 {
+				if (m == right && snake[0].d != left) ||
+					(m == left && snake[0].d != right) ||
+					(m == up && snake[0].d != down) ||
+					(m == down && snake[0].d != up) {
+					snake[0].d = m
+				}
+			}
+
+			moveSnake()
+		}
+		drawSnake(screen)
+	case over:
 	}
-	drawSnake(screen)
+
 	return nil
 }
 
@@ -143,7 +188,7 @@ func move() direction {
 }
 
 func main() {
-	if err := ebiten.Run(update, 320, 240, 2, "Hello, World!"); err != nil {
+	if err := ebiten.Run(update, 320, 240, 2, "danger noodle"); err != nil {
 		log.Fatal(err)
 	}
 }
